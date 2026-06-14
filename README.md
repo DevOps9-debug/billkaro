@@ -268,10 +268,5 @@ npm run dev   # Runs on :5173, proxies /api to :8000
 
 ---
 
-## Screenshots
-
-*Invoice with GST breakdown, amount in words, vendor code, terms & conditions, and authorized signature*
-
----
 
 
