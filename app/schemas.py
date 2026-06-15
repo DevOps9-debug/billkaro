@@ -127,6 +127,7 @@ class InvoiceCreate(BaseModel):
     date: date
     lines: List[InvoiceLineIn]
     po_number: str | None = None
+    invoice_number: str | None = None
 
 
 class InvoiceLineOut(BaseModel):
