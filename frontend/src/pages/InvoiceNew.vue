@@ -3,7 +3,7 @@
     <h1 class="page-title">New Invoice</h1>
     <div class="card">
       <div class="form-row cols-2">
-        <div class="form-group"><label>Invoice number</label><input :value="previewNumber" readonly></div>
+        <div class="form-group"><label>Invoice number</label><input v-model="invoiceNumber"></div>
         <div class="form-group"><label>Date</label><input v-model="invDate" type="date"></div>
       </div>
       <div class="form-row cols-1">

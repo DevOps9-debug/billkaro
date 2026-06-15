@@ -23,29 +23,17 @@ def _user_settings(db: Session, user_id: int) -> dict:
 
 @router.get("/next-number")
 def get_next_number(db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
-    """Preview the invoice number that will be assigned on next save (does not increment)."""
+    """Preview the next invoice number (does not increment). Never resets — continuous forever."""
     settings = _user_settings(db, user.id)
     prefix = settings.get("invoice_prefix", "INV") or "INV"
-
-    today = date.today()
-    if today.month >= 4:
-        fy_label = f"{today.year}-{str(today.year + 1)[-2:]}"
-    else:
-        fy_label = f"{today.year - 1}-{str(today.year)[-2:]}"
 
     seq_setting = db.execute(
         select(models.Setting).where(models.Setting.user_id == user.id, models.Setting.key == "invoice_seq")
     ).scalar_one_or_none()
-    year_setting = db.execute(
-        select(models.Setting).where(models.Setting.user_id == user.id, models.Setting.key == "invoice_seq_year")
-    ).scalar_one_or_none()
 
     current_seq = int(seq_setting.value) if seq_setting and seq_setting.value else 0
-    current_year = year_setting.value if year_setting else ""
-
-    next_seq = 1 if current_year != fy_label else current_seq + 1
-    number = f"{prefix}-{fy_label}-{str(next_seq).zfill(4)}"
-    return {"number": number}
+    next_seq = current_seq + 1
+    return {"number": f"{prefix}-{str(next_seq).zfill(4)}"}
 
 
 @router.get("", response_model=list[schemas.InvoiceOut])
@@ -96,43 +84,32 @@ def create_invoice(payload: schemas.InvoiceCreate, db: Session = Depends(get_db)
     sgst = gst_amt / 2 if is_intra else 0
     igst = 0 if is_intra else gst_amt
 
-    # ---- Persistent, never-reused invoice numbering ----
-    # Resets automatically each Indian financial year (Apr 1 - Mar 31).
-    # Deleting invoices never affects the next number.
-    today = payload.date
-    if today.month >= 4:
-        fy_label = f"{today.year}-{str(today.year + 1)[-2:]}"
-    else:
-        fy_label = f"{today.year - 1}-{str(today.year)[-2:]}"
-
-    seq_key = "invoice_seq"
-    year_key = "invoice_seq_year"
-
+    # ---- Invoice numbering — continuous, never resets, editable ----
     seq_setting = db.execute(
-        select(models.Setting).where(models.Setting.user_id == user.id, models.Setting.key == seq_key)
-    ).scalar_one_or_none()
-    year_setting = db.execute(
-        select(models.Setting).where(models.Setting.user_id == user.id, models.Setting.key == year_key)
+        select(models.Setting).where(models.Setting.user_id == user.id, models.Setting.key == "invoice_seq")
     ).scalar_one_or_none()
 
     current_seq = int(seq_setting.value) if seq_setting and seq_setting.value else 0
-    current_year = year_setting.value if year_setting else ""
 
-    if current_year != fy_label:
-        current_seq = 0
-        if year_setting:
-            year_setting.value = fy_label
-        else:
-            db.add(models.Setting(user_id=user.id, key=year_key, value=fy_label))
-
-    current_seq += 1
-    if seq_setting:
-        seq_setting.value = str(current_seq)
+    if payload.invoice_number:
+        # Father typed a custom number — use it and extract sequence from it
+        number = payload.invoice_number.strip()
+        # Try to extract the numeric part from the end (e.g. "INV-0026" -> 26)
+        try:
+            seq_val = int(number.split("-")[-1])
+        except (ValueError, IndexError):
+            seq_val = current_seq + 1
     else:
-        db.add(models.Setting(user_id=user.id, key=seq_key, value=str(current_seq)))
+        # Auto-generate next number
+        seq_val = current_seq + 1
+        number = f"{prefix}-{str(seq_val).zfill(4)}"
 
-    number = f"{prefix}-{fy_label}-{str(current_seq).zfill(4)}"
-    # ------------------------------------------------------
+    # Save the sequence so next invoice continues from here
+    if seq_setting:
+        seq_setting.value = str(seq_val)
+    else:
+        db.add(models.Setting(user_id=user.id, key="invoice_seq", value=str(seq_val)))
+    # ----------------------------------------------------------------
 
     col_snapshot = [
         c.name for c in db.execute(
@@ -277,6 +254,7 @@ def export_pdf(
         headers={"Content-Disposition": f"attachment; filename=gst-invoices-{suffix}.pdf"},
     )
 
+
 @router.patch("/{invoice_id}/cancel")
 def cancel_invoice(invoice_id: int, db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
     invoice = db.get(models.Invoice, invoice_id)
@@ -286,6 +264,7 @@ def cancel_invoice(invoice_id: int, db: Session = Depends(get_db), user: models.
     db.commit()
     db.refresh(invoice)
     return invoice
+
 
 @router.get("/{invoice_id}", response_model=schemas.InvoiceOut)
 def get_invoice(invoice_id: int, db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
