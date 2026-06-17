@@ -114,15 +114,14 @@ const invDate = ref(new Date().toISOString().split('T')[0])
 const poNumber = ref('')
 const selectedCustomerId = ref('')
 const lines = ref([])
-const previewNumber = ref('Loading...')
+const invoiceNumber = ref('Loading...')
 const totals = ref({ subtotal: 0, cgst: 0, sgst: 0, igst: 0, grand: 0 })
-
 async function loadPreviewNumber() {
   try {
     const res = await axios.get('/invoices/next-number')
-    previewNumber.value = res.data.number
+    invoiceNumber.value = res.data.number
   } catch (e) {
-    previewNumber.value = 'Auto-generated on save'
+    invoiceNumber.value = ''
   }
 }
 
@@ -238,6 +237,7 @@ async function save() {
   const payload = {
     customer_id: selectedCustomerId.value,
     date: invDate.value,
+    invoice_number: invoiceNumber.value || null,
     po_number: poNumber.value || null,
     lines: validLines.map(l => ({
       item_id: l.item_id || null,
