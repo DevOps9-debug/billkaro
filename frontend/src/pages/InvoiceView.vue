@@ -93,6 +93,35 @@
         </div>
       </div>
 
+     <!-- Tax breakdown -->
+      <div style="margin-bottom:16px;overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="background:#f4f4f5;">
+              <th style="padding:6px 9px;text-align:left;border-bottom:1px solid #e5e7eb;">HSN/SAC</th>
+              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">Tax Rate</th>
+              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">Taxable Amt</th>
+              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">CGST Amt</th>
+              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">SGST Amt</th>
+              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">Total Tax</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in inv.tax_breakdown" :key="row.hsn" style="border-bottom:1px solid #f0f0f0;">
+              <td style="padding:6px 9px;">{{ row.hsn }}</td>
+              <td style="padding:6px 9px;text-align:right;">{{ row.rate }}%</td>
+              <td style="padding:6px 9px;text-align:right;">{{ fmt(row.taxable) }}</td>
+              <td style="padding:6px 9px;text-align:right;">{{ fmt(row.cgst) }}</td>
+              <td style="padding:6px 9px;text-align:right;">{{ fmt(row.sgst) }}</td>
+              <td style="padding:6px 9px;text-align:right;font-weight:600;">{{ fmt(row.cgst + row.sgst) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bank details -->
+      <div v-if="settings.bank_name" style="font-size:12px;color:#888;background:#f8f9fa;padding:9px 14px;border-radius:8px;">
+
       <!-- Bank details -->
       <div v-if="settings.bank_name" style="font-size:12px;color:#888;background:#f8f9fa;padding:9px 14px;border-radius:8px;">
         Bank: {{ settings.bank_name }} &nbsp;|&nbsp; A/C: {{ settings.bank_account }} &nbsp;|&nbsp; IFSC: {{ settings.bank_ifsc }}
@@ -105,8 +134,9 @@
       <!-- Signature -->
       <div style="display:flex;justify-content:flex-end;margin-top:50px;">
         <div style="text-align:center;width:220px;">
+          <div style="font-weight:600;margin-bottom:35px;">for {{ settings.biz_name || '' }}</div>
           <div style="border-top:1px solid #333;padding-top:6px;font-size:12px;color:#555;">
-            Authorized Signature
+            Authorized Signatory
           </div>
         </div>
       </div>

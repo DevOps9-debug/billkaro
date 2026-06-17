@@ -83,6 +83,26 @@ def create_invoice(payload: schemas.InvoiceCreate, db: Session = Depends(get_db)
     cgst = gst_amt / 2 if is_intra else 0
     sgst = gst_amt / 2 if is_intra else 0
     igst = 0 if is_intra else gst_amt
+    # Group by HSN for tax breakdown table
+    hsn_groups = {}
+    for line in payload.lines:
+        hsn = line.hsn or "—"
+        line_amount = line.quantity * line.rate
+        if hsn not in hsn_groups:
+            hsn_groups[hsn] = 0
+        hsn_groups[hsn] += line_amount
+
+    tax_breakdown = []
+    for hsn, taxable in hsn_groups.items():
+        hsn_gst = taxable * gst_rate / 100
+        tax_breakdown.append({
+            "hsn": hsn,
+            "rate": gst_rate,
+            "taxable": round(taxable, 2),
+            "cgst": round(hsn_gst / 2, 2) if is_intra else 0,
+            "sgst": round(hsn_gst / 2, 2) if is_intra else 0,
+            "igst": round(hsn_gst, 2) if not is_intra else 0,
+        })
 
     # ---- Invoice numbering — continuous, never resets, editable ----
     seq_setting = db.execute(
@@ -139,6 +159,7 @@ def create_invoice(payload: schemas.InvoiceCreate, db: Session = Depends(get_db)
         grand_total=round(subtotal + gst_amt, 2),
         is_intra_state=is_intra,
         col_snapshot=col_snapshot,
+        tax_breakdown=tax_breakdown,
     )
     db.add(invoice)
     db.flush()

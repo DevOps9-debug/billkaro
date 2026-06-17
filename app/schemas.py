@@ -165,6 +165,7 @@ class InvoiceOut(BaseModel):
     lines: List[InvoiceLineOut] = []
     status: str = "active"
     po_number: str | None = None
+    tax_breakdown: list | None = None
 
     class Config:
         from_attributes = True

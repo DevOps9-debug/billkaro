@@ -127,6 +127,33 @@ INVOICE_BLOCK = """
 
   <div style="clear:both;"></div>
 
+  {% if invoice.tax_breakdown %}
+  <table class="tax-breakdown">
+    <thead>
+      <tr>
+        <th>HSN/SAC</th>
+        <th style="text-align:right;">Tax Rate</th>
+        <th style="text-align:right;">Taxable Amt</th>
+        <th style="text-align:right;">CGST Amt</th>
+        <th style="text-align:right;">SGST Amt</th>
+        <th style="text-align:right;">Total Tax</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in invoice.tax_breakdown %}
+      <tr>
+        <td>{{ row.hsn }}</td>
+        <td style="text-align:right;">{{ row.rate }}%</td>
+        <td style="text-align:right;">{{ '%.2f'|format(row.taxable) }}</td>
+        <td style="text-align:right;">{{ '%.2f'|format(row.cgst) }}</td>
+        <td style="text-align:right;">{{ '%.2f'|format(row.sgst) }}</td>
+        <td style="text-align:right; font-weight:bold;">{{ '%.2f'|format(row.cgst + row.sgst) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
   {% if settings.bank_name %}
   <div class="bank">
     <strong>Bank Details:</strong>
@@ -142,9 +169,11 @@ INVOICE_BLOCK = """
   {% endif %}
 
   <div class="signature">
-    <div class="signature-box">Authorized Signature</div>
+    <div class="signature-box">
+      <div style="margin-bottom:35px;font-weight:600;">for {{ settings.biz_name or '' }}</div>
+      Authorized Signatory
+    </div>
   </div>
-</div>
 """
 
 PAGE_TEMPLATE = """
@@ -179,6 +208,9 @@ PAGE_TEMPLATE = """
   .terms { font-size: 10px; color: #777; margin-top: 10px; clear: both; }
   .signature { display: flex; justify-content: flex-end; margin-top: 50px; }
   .signature-box { width: 200px; text-align: center; border-top: 1px solid #333; padding-top: 6px; font-size: 11px; color: #555; }
+  table.tax-breakdown { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 11px; clear: both; }
+  table.tax-breakdown th { background: #f0f0f0; padding: 5px 7px; text-align: left; border-bottom: 1px solid #ddd; }
+  table.tax-breakdown td { padding: 5px 7px; border-bottom: 1px solid #eee; }
 </style>
 </head>
 <body>
