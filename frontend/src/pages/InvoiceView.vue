@@ -41,7 +41,7 @@
           <div style="color:#888;">GSTIN: {{ inv.customer_gstin }}</div>
           <div v-if="inv.customer_address" style="color:#888;">{{ inv.customer_address }}</div>
           <div style="color:#888;">{{ inv.customer_state }}</div>
-        </div>  
+        </div>
       </div>
 
       <!-- Lines table -->
@@ -93,8 +93,8 @@
         </div>
       </div>
 
-     <!-- Tax breakdown -->
-      <div style="margin-bottom:16px;overflow-x:auto;">
+      <!-- Tax breakdown -->
+      <div v-if="inv.tax_breakdown && inv.tax_breakdown.length" style="margin-bottom:16px;overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead>
             <tr style="background:#f4f4f5;">
@@ -121,16 +121,14 @@
 
       <!-- Bank details -->
       <div v-if="settings.bank_name" style="font-size:12px;color:#888;background:#f8f9fa;padding:9px 14px;border-radius:8px;">
-
-      <!-- Bank details -->
-      <div v-if="settings.bank_name" style="font-size:12px;color:#888;background:#f8f9fa;padding:9px 14px;border-radius:8px;">
         Bank: {{ settings.bank_name }} &nbsp;|&nbsp; A/C: {{ settings.bank_account }} &nbsp;|&nbsp; IFSC: {{ settings.bank_ifsc }}
       </div>
+
       <div v-if="settings.terms_conditions" style="font-size:11px;color:#777;margin-top:10px;white-space:pre-line;">
         <strong>Terms & Conditions:</strong><br>
         {{ settings.terms_conditions }}
       </div>
-      
+
       <!-- Signature -->
       <div style="display:flex;justify-content:flex-end;margin-top:50px;">
         <div style="text-align:center;width:220px;">
