@@ -99,6 +99,7 @@ class Invoice(Base):
     grand_total = Column(Float, default=0)
     is_intra_state = Column(Boolean, default=True)
     col_snapshot = Column(JSON, nullable=True, default=list)
+    tax_breakdown = Column(JSON, nullable=True, default=list)
     status = Column(String(20), default="active")  # "active" or "cancelled"
     created_at = Column(DateTime, server_default=func.now())
 
