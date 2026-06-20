@@ -15,129 +15,140 @@
     </div>
 
     <div v-if="loading" class="loading">Loading...</div>
-    <div v-else-if="inv" class="card invoice-paper" id="print-area">
-    <div v-if="inv.status === 'cancelled'" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;padding:8px 14px;font-weight:700;text-align:center;margin-bottom:14px;letter-spacing:0.05em;">
+    <div v-else-if="inv" id="print-area">
+
+      <div v-if="inv.status === 'cancelled'" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:8px;padding:8px 14px;font-weight:700;text-align:center;margin-bottom:14px;letter-spacing:0.05em;">
         CANCELLED
       </div>
-      <!-- Title -->
-      <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #e5e7eb;padding-bottom:12px;margin-bottom:16px;">
-        <div style="font-size:18px;font-weight:700;">Tax Invoice</div>
-        <div style="font-size:13px;color:#888;">{{ inv.number }} &nbsp;|&nbsp; {{ inv.date }}{{ inv.po_number ? ' | PO: ' + inv.po_number : '' }}</div>
-      </div>
 
-      <!-- From + Bill To -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-        <div style="background:#f8f9fa;border-radius:8px;padding:10px 14px;font-size:13px;">
-          <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">From</div>
-          <div style="font-weight:700;">{{ settings.biz_name || '—' }}</div>
-          <div v-if="settings.about" style="color:#888;font-style:italic;">{{ settings.about }}</div>
-          <div v-if="settings.address" style="color:#888;">{{ settings.address }}</div>
-          <div style="color:#888;">GSTIN: {{ settings.gstin || '—' }}{{ settings.phone ? ' | ' + settings.phone : '' }}{{ settings.email ? ' | ' + settings.email : '' }}</div>
-        </div>
-        <div style="background:#f8f9fa;border-radius:8px;padding:10px 14px;font-size:13px;">
-          <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">Bill To</div>
-          <div style="font-weight:700;">{{ inv.customer_name }}</div>
-          <div v-if="inv.customer_vendor_code" style="color:#888;">Vendor Code: {{ inv.customer_vendor_code }}</div>
-          <div style="color:#888;">GSTIN: {{ inv.customer_gstin }}</div>
-          <div v-if="inv.customer_address" style="color:#888;">{{ inv.customer_address }}</div>
-          <div style="color:#888;">{{ inv.customer_state }}</div>
-        </div>
-      </div>
+      <!-- 3 copies -->
+      <div v-for="(copyLabel, ci) in ['Original for Recipient', 'Duplicate for Transporter', 'Triplicate for Supplier']" :key="ci" class="invoice-copy card invoice-paper">
 
-      <!-- Lines table -->
-      <div style="overflow-x:auto;margin-bottom:14px;">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead style="background:#f4f4f5;">
-          <tr>
-            <th style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e5e7eb;width:30px;">#</th>
-            <th style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e5e7eb;">Item</th>
-            <th style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e5e7eb;">HSN</th>
-            <th v-for="col in inv.col_snapshot" :key="col" style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e5e7eb;">{{ col }}</th>
-            <th style="padding:7px 9px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e5e7eb;">Qty</th>
-            <th style="padding:7px 9px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e5e7eb;">Rate</th>
-            <th style="padding:7px 9px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid #e5e7eb;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(line, li) in inv.lines" :key="line.id" style="border-bottom:1px solid #f0f0f0;">
-            <td style="padding:8px 9px;color:#888;">{{ li + 1 }}</td>
-            <td style="padding:8px 9px;">{{ line.item_name }}</td>
-            <td style="padding:8px 9px;color:#888;">{{ line.hsn }}</td>
-            <td v-for="(col, ci) in inv.col_snapshot" :key="col" style="padding:8px 9px;color:#888;">{{ line.custom_values?.[ci] || '—' }}</td>
-            <td style="padding:8px 9px;text-align:right;">{{ line.quantity }} {{ line.unit }}</td>
-            <td style="padding:8px 9px;text-align:right;">{{ fmt(line.rate) }}</td>
-            <td style="padding:8px 9px;text-align:right;font-weight:600;">{{ fmt(line.amount) }}</td>
-          </tr>
-        </tbody>
-      </table>
-      </div>
-
-      <div style="font-size:12px;color:#555;margin-bottom:8px;">
-        <strong>Amount in Words:</strong> {{ amountInWords(inv.grand_total) }}
-      </div>
-
-      <!-- Totals -->
-      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
-        <div style="min-width:250px;font-size:13px;">
-          <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;">Subtotal<span>{{ fmt(inv.subtotal) }}</span></div>
-          <template v-if="inv.is_intra_state">
-            <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;">CGST ({{ inv.gst_rate / 2 }}%)<span>{{ fmt(inv.cgst) }}</span></div>
-            <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;">SGST ({{ inv.gst_rate / 2 }}%)<span>{{ fmt(inv.sgst) }}</span></div>
-          </template>
-          <template v-else>
-            <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;">IGST ({{ inv.gst_rate }}%)<span>{{ fmt(inv.igst) }}</span></div>
-          </template>
-          <div style="display:flex;justify-content:space-between;padding:9px 0 3px;font-size:16px;font-weight:700;border-top:1px solid #e5e7eb;margin-top:6px;">
-            Grand Total<span style="color:#185FA5;">{{ fmt(inv.grand_total) }}</span>
+        <!-- Title -->
+        <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #333;padding-bottom:12px;margin-bottom:16px;">
+          <div style="font-size:18px;font-weight:700;">Tax Invoice</div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;color:#555;">{{ inv.number }} &nbsp;|&nbsp; {{ inv.date }}{{ inv.po_number ? ' | PO: ' + inv.po_number : '' }}</div>
+            <div style="font-size:12px;font-weight:700;color:#185FA5;margin-top:3px;">{{ copyLabel }}</div>
           </div>
         </div>
-      </div>
 
-      <!-- Tax breakdown -->
-      <div v-if="inv.tax_breakdown && inv.tax_breakdown.length" style="margin-bottom:16px;overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          <thead>
-            <tr style="background:#f4f4f5;">
-              <th style="padding:6px 9px;text-align:left;border-bottom:1px solid #e5e7eb;">HSN/SAC</th>
-              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">Tax Rate</th>
-              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">Taxable Amt</th>
-              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">CGST Amt</th>
-              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">SGST Amt</th>
-              <th style="padding:6px 9px;text-align:right;border-bottom:1px solid #e5e7eb;">Total Tax</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in inv.tax_breakdown" :key="row.hsn" style="border-bottom:1px solid #f0f0f0;">
-              <td style="padding:6px 9px;">{{ row.hsn }}</td>
-              <td style="padding:6px 9px;text-align:right;">{{ row.rate }}%</td>
-              <td style="padding:6px 9px;text-align:right;">{{ fmt(row.taxable) }}</td>
-              <td style="padding:6px 9px;text-align:right;">{{ fmt(row.cgst) }}</td>
-              <td style="padding:6px 9px;text-align:right;">{{ fmt(row.sgst) }}</td>
-              <td style="padding:6px 9px;text-align:right;font-weight:600;">{{ fmt(row.cgst + row.sgst) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Bank details -->
-      <div v-if="settings.bank_name" style="font-size:12px;color:#888;background:#f8f9fa;padding:9px 14px;border-radius:8px;">
-        Bank: {{ settings.bank_name }} &nbsp;|&nbsp; A/C: {{ settings.bank_account }} &nbsp;|&nbsp; IFSC: {{ settings.bank_ifsc }}
-      </div>
-
-      <div v-if="settings.terms_conditions" style="font-size:11px;color:#777;margin-top:10px;white-space:pre-line;">
-        <strong>Terms & Conditions:</strong><br>
-        {{ settings.terms_conditions }}
-      </div>
-
-      <!-- Signature -->
-      <div style="display:flex;justify-content:flex-end;margin-top:50px;">
-        <div style="text-align:center;width:220px;">
-          <div style="font-weight:600;margin-bottom:35px;">for {{ settings.biz_name || '' }}</div>
-          <div style="border-top:1px solid #333;padding-top:6px;font-size:12px;color:#555;">
-            Authorized Signatory
+        <!-- From + Bill To -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div style="background:#f8f9fa;border-radius:8px;padding:10px 14px;font-size:13px;">
+            <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">From</div>
+            <div style="font-weight:700;">{{ settings.biz_name || '—' }}</div>
+            <div v-if="settings.about" style="color:#888;font-style:italic;">{{ settings.about }}</div>
+            <div v-if="settings.address" style="color:#888;">{{ settings.address }}</div>
+            <div style="color:#888;">GSTIN: {{ settings.gstin || '—' }}{{ settings.phone ? ' | ' + settings.phone : '' }}{{ settings.email ? ' | ' + settings.email : '' }}</div>
+          </div>
+          <div style="background:#f8f9fa;border-radius:8px;padding:10px 14px;font-size:13px;">
+            <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">Bill To</div>
+            <div style="font-weight:700;">{{ inv.customer_name }}</div>
+            <div v-if="inv.customer_vendor_code" style="color:#888;">Vendor Code: {{ inv.customer_vendor_code }}</div>
+            <div style="color:#888;">GSTIN: {{ inv.customer_gstin }}</div>
+            <div v-if="inv.customer_address" style="color:#888;">{{ inv.customer_address }}</div>
+            <div style="color:#888;">{{ inv.customer_state }}</div>
           </div>
         </div>
-      </div>
+
+        <!-- Lines table -->
+        <div style="overflow-x:auto;margin-bottom:14px;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead style="background:#f4f4f5;">
+              <tr>
+                <th style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;width:30px;">#</th>
+                <th style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;">Item</th>
+                <th style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;">HSN</th>
+                <th v-for="col in inv.col_snapshot" :key="col" style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;">{{ col }}</th>
+                <th style="padding:7px 9px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;">Qty</th>
+                <th style="padding:7px 9px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;">Rate</th>
+                <th style="padding:7px 9px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(line, li) in inv.lines" :key="line.id" style="border-bottom:1px solid #bbb;">
+                <td style="padding:8px 9px;color:#888;">{{ li + 1 }}</td>
+                <td style="padding:8px 9px;">{{ line.item_name }}</td>
+                <td style="padding:8px 9px;color:#888;">{{ line.hsn }}</td>
+                <td v-for="(col, ci2) in inv.col_snapshot" :key="col" style="padding:8px 9px;color:#888;">{{ line.custom_values?.[ci2] || '—' }}</td>
+                <td style="padding:8px 9px;text-align:right;">{{ line.quantity }} {{ line.unit }}</td>
+                <td style="padding:8px 9px;text-align:right;">{{ fmt(line.rate) }}</td>
+                <td style="padding:8px 9px;text-align:right;font-weight:600;">{{ fmt(line.amount) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="font-size:12px;color:#555;margin-bottom:8px;">
+          <strong>Amount in Words:</strong> {{ amountInWords(inv.grand_total) }}
+        </div>
+
+        <!-- Totals -->
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+          <div style="min-width:250px;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;">Subtotal<span>{{ fmt(inv.subtotal) }}</span></div>
+            <template v-if="inv.is_intra_state">
+              <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;">CGST ({{ inv.gst_rate / 2 }}%)<span>{{ fmt(inv.cgst) }}</span></div>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;">SGST ({{ inv.gst_rate / 2 }}%)<span>{{ fmt(inv.sgst) }}</span></div>
+            </template>
+            <template v-else>
+              <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;">IGST ({{ inv.gst_rate }}%)<span>{{ fmt(inv.igst) }}</span></div>
+            </template>
+            <div style="display:flex;justify-content:space-between;padding:9px 0 3px;font-size:16px;font-weight:700;border-top:2px solid #333;margin-top:6px;">
+              Grand Total<span style="color:#185FA5;">{{ fmt(inv.grand_total) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tax breakdown -->
+        <div v-if="inv.tax_breakdown && inv.tax_breakdown.length" style="margin-bottom:16px;overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="background:#f4f4f5;">
+                <th style="padding:6px 9px;text-align:left;border-bottom:2px solid #333;">HSN/SAC</th>
+                <th style="padding:6px 9px;text-align:right;border-bottom:2px solid #333;">Tax Rate</th>
+                <th style="padding:6px 9px;text-align:right;border-bottom:2px solid #333;">Taxable Amt</th>
+                <th style="padding:6px 9px;text-align:right;border-bottom:2px solid #333;">CGST Amt</th>
+                <th style="padding:6px 9px;text-align:right;border-bottom:2px solid #333;">SGST Amt</th>
+                <th style="padding:6px 9px;text-align:right;border-bottom:2px solid #333;">Total Tax</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in inv.tax_breakdown" :key="row.hsn" style="border-bottom:1px solid #bbb;">
+                <td style="padding:6px 9px;">{{ row.hsn }}</td>
+                <td style="padding:6px 9px;text-align:right;">{{ row.rate }}%</td>
+                <td style="padding:6px 9px;text-align:right;">{{ fmt(row.taxable) }}</td>
+                <td style="padding:6px 9px;text-align:right;">{{ fmt(row.cgst) }}</td>
+                <td style="padding:6px 9px;text-align:right;">{{ fmt(row.sgst) }}</td>
+                <td style="padding:6px 9px;text-align:right;font-weight:600;">{{ fmt(row.cgst + row.sgst) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bank details -->
+        <div v-if="settings.bank_name" style="font-size:12px;color:#888;background:#f8f9fa;padding:9px 14px;border-radius:8px;">
+          Bank: {{ settings.bank_name }} &nbsp;|&nbsp; A/C: {{ settings.bank_account }} &nbsp;|&nbsp; IFSC: {{ settings.bank_ifsc }}
+        </div>
+
+        <div v-if="settings.terms_conditions" style="font-size:11px;color:#777;margin-top:10px;white-space:pre-line;">
+          <strong>Terms & Conditions:</strong><br>
+          {{ settings.terms_conditions }}
+        </div>
+
+        <!-- Signature -->
+        <div style="display:flex;justify-content:flex-end;margin-top:50px;">
+          <div style="text-align:center;width:220px;">
+            <div style="font-weight:600;margin-bottom:35px;">for {{ settings.biz_name || '' }}</div>
+            <div style="border-top:1px solid #333;padding-top:6px;font-size:12px;color:#555;">
+              Authorized Signatory
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end invoice-copy -->
+
     </div>
     <div v-if="toast" class="toast">{{ toast }}</div>
   </div>
@@ -214,7 +225,6 @@ function threeDigits(n) {
 function amountInWords(amount) {
   let rupees = Math.floor(amount)
   const paise = Math.round((amount - rupees) * 100)
-
   let words
   if (rupees === 0) {
     words = "Zero"
@@ -224,15 +234,12 @@ function amountInWords(amount) {
     const lakh = Math.floor(rupees / 100000); rupees %= 100000
     const thousand = Math.floor(rupees / 1000); rupees %= 1000
     const hundred = rupees
-
     if (crore) parts.push(threeDigits(crore) + " Crore")
     if (lakh) parts.push(threeDigits(lakh) + " Lakh")
     if (thousand) parts.push(threeDigits(thousand) + " Thousand")
     if (hundred) parts.push(threeDigits(hundred))
-
     words = parts.join(" ")
   }
-
   let result = "Rupees " + words + " Only"
   if (paise) result = "Rupees " + words + " and " + twoDigits(paise) + " Paise Only"
   return result
@@ -253,10 +260,20 @@ async function toggleCancel() {
 
 <style>
 .invoice-paper { background: #fff !important; color: #111 !important; }
+.invoice-copy { margin-bottom: 40px; }
 
 @media print {
   .sidebar, .sec-hdr { display: none !important; }
   .main-content { padding: 0 !important; }
-  .invoice-paper { border: none !important; box-shadow: none !important; }
+  .invoice-copy { 
+    page-break-after: always;
+    border: none !important; 
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+  }
+  .invoice-copy:last-child {
+    page-break-after: avoid;
+  }
 }
 </style>
