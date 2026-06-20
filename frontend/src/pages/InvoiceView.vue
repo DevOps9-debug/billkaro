@@ -272,6 +272,8 @@ async function toggleCancel() {
     box-shadow: none !important;
     margin: 0 !important;
     padding: 20px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .invoice-copy:last-child {
     page-break-after: avoid;
