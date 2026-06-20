@@ -288,6 +288,9 @@ async function toggleCancel() {
   td, th {
     border: 1px solid #000 !important;
   }
+  body, html {
+    background: #fff !important;
+  }
   div {
     border-color: #000 !important;
   }
