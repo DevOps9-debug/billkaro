@@ -56,7 +56,10 @@ INVOICE_BLOCK = """
 <div class="invoice-block">
   <div class="header">
     <div class="inv-title">Tax Invoice</div>
-    <div class="inv-meta">{{ invoice.number }} &nbsp;|&nbsp; {{ invoice.date.strftime('%d %b %Y') }}{% if invoice.po_number %} | PO: {{ invoice.po_number }}{% endif %}</div>
+    <div style="text-align:right;">
+      <div class="inv-meta">{{ invoice.number }} &nbsp;|&nbsp; {{ invoice.date.strftime('%d %b %Y') }}{% if invoice.po_number %} | PO: {{ invoice.po_number }}{% endif %}</div>
+      {% if copy_label %}<div style="font-size:11px;font-weight:bold;color:#185FA5;margin-top:3px;">{{ copy_label }}</div>{% endif %}
+    </div>
   </div>
 
   <table class="grid2">
@@ -195,8 +198,8 @@ PAGE_TEMPLATE = """
   .val { font-weight: bold; }
   .val-sm { font-size: 11px; color: #555; }
   table.items { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-  table.items th { background: #f0f0f0; padding: 6px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #ddd; }
-  table.items td { padding: 7px 8px; border-bottom: 1px solid #eee; }
+  table.items th { background: #f0f0f0; padding: 6px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #999; }
+  table.items td { padding: 7px 8px; border-bottom: 1px solid #bbb; }
   table.items tr:last-child td { border-bottom: none; }
   .words { font-size: 11px; color: #555; margin-bottom: 6px; clear: both; }
   .totals { float: right; width: 240px; }
@@ -226,8 +229,16 @@ _page_template = _env.from_string(PAGE_TEMPLATE)
 
 
 def render_invoice_pdf(invoice, settings: dict) -> bytes:
-    block_html = _block_template.render(invoice=invoice, settings=settings)
-    full_html = _page_template.render(blocks=block_html)
+    copies = [
+        ("Original for Recipient", invoice, settings),
+        ("Duplicate for Transporter", invoice, settings),
+        ("Triplicate for Supplier", invoice, settings),
+    ]
+    blocks_html = ""
+    for label, inv, s in copies:
+        block = _block_template.render(invoice=inv, settings=s, copy_label=label)
+        blocks_html += block
+    full_html = _page_template.render(blocks=blocks_html)
     return HTML(string=full_html).write_pdf()
 
 
