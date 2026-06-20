@@ -35,7 +35,7 @@
 
         <!-- From + Bill To -->
         <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0;margin-bottom:16px;border:1px solid #bbb;border-radius:8px;overflow:hidden;">
-          <div style="background:#f8f9fa;padding:10px 14px;font-size:13px;">
+          <div style="background:#fff;padding:10px 14px;font-size:13px;">
             <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">From</div>
             <div style="font-weight:700;">{{ settings.biz_name || '—' }}</div>
             <div v-if="settings.about" style="color:#888;font-style:italic;">{{ settings.about }}</div>
@@ -56,7 +56,7 @@
         <!-- Lines table -->
         <div style="overflow-x:auto;margin-bottom:14px;">
           <table style="width:100%;border-collapse:collapse;font-size:13px;border:1px solid #bbb;">
-            <thead style="background:#f4f4f5;">
+            <thead style="background:#fff;">
               <tr>
                 <th style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;border-right:1px solid #bbb;width:30px;">#</th>
                 <th style="padding:7px 9px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #333;border-right:1px solid #bbb;">Item</th>
@@ -106,7 +106,7 @@
         <div v-if="inv.tax_breakdown && inv.tax_breakdown.length" style="margin-bottom:16px;overflow-x:auto;">
           <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #bbb;">
             <thead>
-              <tr style="background:#f4f4f5;">
+              <tr style="background:#fff;">
                 <th style="padding:6px 9px;text-align:left;border-bottom:2px solid #333;border-right:1px solid #bbb;">HSN/SAC</th>
                 <th style="padding:6px 9px;text-align:right;border-bottom:2px solid #333;border-right:1px solid #bbb;">Tax Rate</th>
                 <th style="padding:6px 9px;text-align:right;border-bottom:2px solid #333;border-right:1px solid #bbb;">Taxable Amt</th>
@@ -129,7 +129,7 @@
         </div>
 
         <!-- Bank details -->
-        <div v-if="settings.bank_name" style="font-size:12px;color:#888;background:#f8f9fa;padding:9px 14px;border-radius:8px;border:1px solid #bbb;">
+        <div v-if="settings.bank_name" style="font-size:12px;color:#888;background:#fff;padding:9px 14px;border-radius:8px;border:1px solid #bbb;">
           Bank: {{ settings.bank_name }} &nbsp;|&nbsp; A/C: {{ settings.bank_account }} &nbsp;|&nbsp; IFSC: {{ settings.bank_ifsc }}
         </div>
 
