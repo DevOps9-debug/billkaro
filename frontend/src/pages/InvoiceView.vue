@@ -279,11 +279,17 @@ async function toggleCancel() {
   .invoice-copy:last-child {
     page-break-after: avoid;
   }
-  table {
-    border-collapse: collapse !important;
+  * {
+    color: #000 !important;
+    border-color: #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   td, th {
-    border: 1px solid #333 !important;
+    border: 1px solid #000 !important;
+  }
+  div {
+    border-color: #000 !important;
   }
 }
 </style>
