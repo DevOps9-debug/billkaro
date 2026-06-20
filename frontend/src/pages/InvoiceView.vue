@@ -34,16 +34,16 @@
         </div>
 
         <!-- From + Bill To -->
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0;margin-bottom:16px;border:1px solid #bbb;border-radius:8px;overflow:hidden;">
-          <div style="background:#fff;padding:10px 14px;font-size:13px;">
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0;margin-bottom:16px;border:2px solid #333;border-radius:8px;overflow:hidden;">
+          <div style="padding:10px 14px;font-size:13px;">
             <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">From</div>
             <div style="font-weight:700;">{{ settings.biz_name || '—' }}</div>
             <div v-if="settings.about" style="color:#888;font-style:italic;">{{ settings.about }}</div>
             <div v-if="settings.address" style="color:#888;">{{ settings.address }}</div>
             <div style="color:#888;">GSTIN: {{ settings.gstin || '—' }}{{ settings.phone ? ' | ' + settings.phone : '' }}{{ settings.email ? ' | ' + settings.email : '' }}</div>
           </div>
-          <div style="width:1px;background:#bbb;"></div>
-          <div style="background:#f8f9fa;padding:10px 14px;font-size:13px;">
+          <div style="width:2px;background:#333;"></div>
+          <div style="padding:10px 14px;font-size:13px;">
             <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">Bill To</div>
             <div style="font-weight:700;">{{ inv.customer_name }}</div>
             <div v-if="inv.customer_vendor_code" style="color:#888;">Vendor Code: {{ inv.customer_vendor_code }}</div>
