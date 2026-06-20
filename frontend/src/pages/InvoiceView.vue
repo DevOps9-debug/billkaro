@@ -274,9 +274,16 @@ async function toggleCancel() {
     padding: 20px !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
   .invoice-copy:last-child {
     page-break-after: avoid;
+  }
+  table {
+    border-collapse: collapse !important;
+  }
+  td, th {
+    border: 1px solid #333 !important;
   }
 }
 </style>
