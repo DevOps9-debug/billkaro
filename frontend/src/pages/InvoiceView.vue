@@ -28,7 +28,7 @@
         <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #333;padding-bottom:12px;margin-bottom:16px;">
           <div style="font-size:18px;font-weight:700;">Tax Invoice</div>
           <div style="text-align:right;">
-            <div style="font-size:13px;color:#555;">{{ inv.number }} &nbsp;|&nbsp; {{ inv.date }}{{ inv.po_number ? ' | PO: ' + inv.po_number : '' }}</div>
+            <div style="font-size:13px;color:#555;">{{ inv.number }} &nbsp;|&nbsp; {{ inv.date }}{{ inv.po_number ? ' | PO: ' + inv.po_number : '' }}{{ inv.customer_vendor_code ? ' | Vendor Code: ' + inv.customer_vendor_code : '' }}</div>
             <div style="font-size:12px;font-weight:700;color:#185FA5;margin-top:3px;">{{ copyLabel }}</div>
           </div>
         </div>
@@ -46,7 +46,6 @@
           <div style="padding:10px 14px;font-size:13px;">
             <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">Bill To</div>
             <div style="font-weight:700;">{{ inv.customer_name }}</div>
-            <div v-if="inv.customer_vendor_code" style="color:#888;">Vendor Code: {{ inv.customer_vendor_code }}</div>
             <div style="color:#888;">GSTIN: {{ inv.customer_gstin }}</div>
             <div v-if="inv.customer_address" style="color:#888;">{{ inv.customer_address }}</div>
             <div style="color:#888;">{{ inv.customer_state }}</div>
