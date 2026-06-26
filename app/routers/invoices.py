@@ -275,6 +275,81 @@ def export_pdf(
         headers={"Content-Disposition": f"attachment; filename=gst-invoices-{suffix}.pdf"},
     )
 
+@router.put("/{invoice_id}", response_model=schemas.InvoiceOut)
+def update_invoice(invoice_id: int, payload: schemas.InvoiceUpdate, db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
+    invoice = db.get(models.Invoice, invoice_id)
+    if not invoice or invoice.user_id != user.id:
+        raise HTTPException(404, "Invoice not found")
+
+    settings = _user_settings(db, user.id)
+    my_gstin = settings.get("gstin", "03") or "03"
+    gst_rate = float(settings.get("gst_rate", "18") or 18)
+
+    customer = db.get(models.Customer, invoice.customer_id)
+    is_intra = customer.gstin[:2] == my_gstin[:2]
+
+    subtotal = sum(line.quantity * line.rate for line in payload.lines)
+    gst_amt = subtotal * gst_rate / 100
+    cgst = gst_amt / 2 if is_intra else 0
+    sgst = gst_amt / 2 if is_intra else 0
+    igst = 0 if is_intra else gst_amt
+
+    # Tax breakdown
+    hsn_groups = {}
+    for line in payload.lines:
+        hsn = line.hsn or "—"
+        line_amount = line.quantity * line.rate
+        if hsn not in hsn_groups:
+            hsn_groups[hsn] = 0
+        hsn_groups[hsn] += line_amount
+
+    tax_breakdown = []
+    for hsn, taxable in hsn_groups.items():
+        hsn_gst = taxable * gst_rate / 100
+        tax_breakdown.append({
+            "hsn": hsn,
+            "rate": gst_rate,
+            "taxable": round(taxable, 2),
+            "cgst": round(hsn_gst / 2, 2) if is_intra else 0,
+            "sgst": round(hsn_gst / 2, 2) if is_intra else 0,
+            "igst": round(hsn_gst, 2) if not is_intra else 0,
+        })
+
+    # Update invoice fields
+    invoice.date = payload.date
+    invoice.po_number = payload.po_number
+    if payload.invoice_number:
+        invoice.number = payload.invoice_number.strip()
+    invoice.subtotal = round(subtotal, 2)
+    invoice.gst_rate = gst_rate
+    invoice.cgst = round(cgst, 2)
+    invoice.sgst = round(sgst, 2)
+    invoice.igst = round(igst, 2)
+    invoice.gst_total = round(gst_amt, 2)
+    invoice.grand_total = round(subtotal + gst_amt, 2)
+    invoice.tax_breakdown = tax_breakdown
+
+    # Delete old lines and recreate
+    for old_line in invoice.lines:
+        db.delete(old_line)
+    db.flush()
+
+    for line in payload.lines:
+        db.add(models.InvoiceLine(
+            invoice_id=invoice.id,
+            item_id=line.item_id,
+            item_name=line.item_name,
+            hsn=line.hsn or "",
+            quantity=line.quantity,
+            rate=line.rate,
+            unit=line.unit or "",
+            amount=round(line.quantity * line.rate, 2),
+            custom_values=line.custom_values or [],
+        ))
+
+    db.commit()
+    db.refresh(invoice)
+    return invoice
 
 @router.patch("/{invoice_id}/cancel")
 def cancel_invoice(invoice_id: int, db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):

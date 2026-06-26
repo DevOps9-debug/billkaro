@@ -8,10 +8,12 @@ const routes = [
   { path: '/',           component: () => import('./pages/Dashboard.vue'),  meta: { title: 'Dashboard' } },
   { path: '/invoice/new',component: () => import('./pages/InvoiceNew.vue'), meta: { title: 'New Invoice' } },
   { path: '/invoices',   component: () => import('./pages/Invoices.vue'),   meta: { title: 'All Invoices' } },
+  { path: '/invoices/:id/edit', component: () => import('./pages/InvoiceNew.vue'), meta: { title: 'Edit Invoice' } },
   { path: '/invoices/:id',component: () => import('./pages/InvoiceView.vue'),meta: { title: 'Invoice' } },
   { path: '/customers',  component: () => import('./pages/Customers.vue'),  meta: { title: 'Customers' } },
   { path: '/items',      component: () => import('./pages/Items.vue'),       meta: { title: 'Items' } },
   { path: '/settings',   component: () => import('./pages/Settings.vue'),   meta: { title: 'Settings' } },
+  
 ]
 
 const router = createRouter({

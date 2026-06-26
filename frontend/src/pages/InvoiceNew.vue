@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="page-title">New Invoice</h1>
+    <h1 class="page-title">{{ editId ? 'Edit Invoice' : 'New Invoice' }}</h1>
     <div class="card">
       <div class="form-row cols-2">
         <div class="form-group"><label>Invoice number</label><input v-model="invoiceNumber"></div>
@@ -12,7 +12,7 @@
       <div class="form-row cols-1">
         <div class="form-group">
           <label>Customer</label>
-          <select v-model="selectedCustomerId" @change="onCustomerChange">
+          <select v-model="selectedCustomerId" @change="onCustomerChange" :disabled="!!editId">
             <option value="">— select customer —</option>
             <option v-for="c in store.customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.gstin }})</option>
           </select>
@@ -91,9 +91,10 @@
 
       <div style="display:flex;gap:8px;margin-top:1rem;">
         <button class="btn btn-primary" @click="save" :disabled="saving">
-          <i class="ti ti-device-floppy"></i> {{ saving ? 'Saving...' : 'Save & Preview' }}
+          <i class="ti ti-device-floppy"></i> {{ saving ? 'Saving...' : (editId ? 'Update Invoice' : 'Save & Preview') }}
         </button>
-        <button class="btn" @click="reset"><i class="ti ti-refresh"></i> Reset</button>
+        <button class="btn" @click="reset" v-if="!editId"><i class="ti ti-refresh"></i> Reset</button>
+        <button class="btn" @click="$router.back()" v-if="editId"><i class="ti ti-arrow-left"></i> Cancel</button>
       </div>
     </div>
     <div v-if="toast" class="toast">{{ toast }}</div>
@@ -104,10 +105,11 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { useAppStore } from '../store'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const store = useAppStore()
 const router = useRouter()
+const route = useRoute()
 const saving = ref(false)
 const toast = ref('')
 const invDate = ref(new Date().toISOString().split('T')[0])
@@ -116,6 +118,11 @@ const selectedCustomerId = ref('')
 const lines = ref([])
 const invoiceNumber = ref('Loading...')
 const totals = ref({ subtotal: 0, cgst: 0, sgst: 0, igst: 0, grand: 0 })
+
+const editId = computed(() =>
+  route.params.id && route.path.includes('/edit') ? route.params.id : null
+)
+
 async function loadPreviewNumber() {
   try {
     const res = await axios.get('/invoices/next-number')
@@ -126,8 +133,35 @@ async function loadPreviewNumber() {
 }
 
 onMounted(async () => {
-  await loadPreviewNumber()
-  addLine()
+  if (editId.value) {
+    // Load existing invoice for editing
+    try {
+      const res = await axios.get('/invoices/' + editId.value)
+      const inv = res.data
+      invoiceNumber.value = inv.number
+      invDate.value = inv.date
+      poNumber.value = inv.po_number || ''
+      selectedCustomerId.value = inv.customer_id
+      await store.loadAll()
+      lines.value = inv.lines.map(l => ({
+        item_id: l.item_id || '',
+        item_name: l.item_name,
+        hsn: l.hsn || '',
+        quantity: l.quantity,
+        rate: l.rate,
+        unit: l.unit || '',
+        custom_values: store.customColumns.map((col, i) => l.custom_values?.[i] || ''),
+        searchText: l.item_name,
+        showDropdown: false,
+      }))
+      calcTotals()
+    } catch (e) {
+      showToast('Error loading invoice')
+    }
+  } else {
+    await loadPreviewNumber()
+    addLine()
+  }
 })
 
 const gstRate = computed(() => parseInt(store.settings.gst_rate || 18))
@@ -252,8 +286,14 @@ async function save() {
 
   saving.value = true
   try {
-    const res = await axios.post('/invoices', payload)
-    showToast('Invoice saved!')
+    let res
+    if (editId.value) {
+      res = await axios.put('/invoices/' + editId.value, payload)
+      showToast('Invoice updated!')
+    } else {
+      res = await axios.post('/invoices', payload)
+      showToast('Invoice saved!')
+    }
     setTimeout(() => router.push('/invoices/' + res.data.id), 500)
   } catch (e) {
     showToast(e.response?.data?.message || e.response?.data?.detail || 'Error saving invoice')
