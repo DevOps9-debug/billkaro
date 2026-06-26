@@ -119,6 +119,7 @@ class InvoiceLineIn(BaseModel):
     hsn: Optional[str] = ""
     quantity: float
     rate: float
+    unit: str = ""
     custom_values: Optional[List[str]] = []
 
 
