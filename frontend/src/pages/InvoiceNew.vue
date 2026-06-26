@@ -12,7 +12,7 @@
       <div class="form-row cols-1">
         <div class="form-group">
           <label>Customer</label>
-          <select v-model="selectedCustomerId" @change="onCustomerChange" :disabled="!!editId">
+          <select v-model="selectedCustomerId" @change="onCustomerChange">
             <option value="">— select customer —</option>
             <option v-for="c in store.customers" :key="c.id" :value="c.id">{{ c.name }} ({{ c.gstin }})</option>
           </select>
@@ -136,13 +136,13 @@ onMounted(async () => {
   if (editId.value) {
     // Load existing invoice for editing
     try {
+      await store.loadAll()
       const res = await axios.get('/invoices/' + editId.value)
       const inv = res.data
       invoiceNumber.value = inv.number
       invDate.value = inv.date
       poNumber.value = inv.po_number || ''
       selectedCustomerId.value = inv.customer_id
-      await store.loadAll()
       lines.value = inv.lines.map(l => ({
         item_id: l.item_id || '',
         item_name: l.item_name,
