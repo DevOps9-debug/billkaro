@@ -10,7 +10,7 @@
         <button class="btn btn-primary" @click="print"><i class="ti ti-printer"></i> Print</button>
         <button class="btn btn-warning" @click="$router.push('/invoices/' + inv.id + '/edit')"><i class="ti ti-pencil"></i> Edit</button>
         <button class="btn" @click="toggleCancel" :disabled="cancelling">
-          <i :class="inv.status === 'cancelled' ? 'ti ti-rotate' : 'ti ti-ban'"></i> {{ inv.status === 'cancelled' ? 'Restore' : 'Cancel Invoice' }}
+          <i :class="inv?.status === 'cancelled' ? 'ti ti-rotate' : 'ti ti-ban'"></i> {{ inv?.status === 'cancelled' ? 'Restore' : 'Cancel Invoice' }}
         </button>
       </div>
     </div>
