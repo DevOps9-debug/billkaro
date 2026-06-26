@@ -117,6 +117,7 @@ class InvoiceLine(Base):
     hsn = Column(String(20), nullable=True)
     quantity = Column(Float, nullable=False)
     rate = Column(Float, nullable=False)
+    unit = Column(String(20), default="")
     amount = Column(Float, nullable=False)
     custom_values = Column(JSON, nullable=True, default=list)
 
