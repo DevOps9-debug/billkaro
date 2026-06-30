@@ -131,6 +131,7 @@ class InvoiceCreate(BaseModel):
     invoice_number: str | None = None
 
 class InvoiceUpdate(BaseModel):
+    customer_id: int
     date: date
     po_number: str | None = None
     invoice_number: str | None = None

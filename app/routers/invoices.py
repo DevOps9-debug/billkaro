@@ -281,11 +281,14 @@ def update_invoice(invoice_id: int, payload: schemas.InvoiceUpdate, db: Session 
     if not invoice or invoice.user_id != user.id:
         raise HTTPException(404, "Invoice not found")
 
+    customer = db.get(models.Customer, payload.customer_id)
+    if not customer or customer.user_id != user.id:
+        raise HTTPException(404, "Customer not found")
+
     settings = _user_settings(db, user.id)
     my_gstin = settings.get("gstin", "03") or "03"
     gst_rate = float(settings.get("gst_rate", "18") or 18)
 
-    customer = db.get(models.Customer, invoice.customer_id)
     is_intra = customer.gstin[:2] == my_gstin[:2]
 
     subtotal = sum(line.quantity * line.rate for line in payload.lines)
@@ -315,7 +318,13 @@ def update_invoice(invoice_id: int, payload: schemas.InvoiceUpdate, db: Session 
             "igst": round(hsn_gst, 2) if not is_intra else 0,
         })
 
-    # Update invoice fields
+    # Update invoice fields - including customer
+    invoice.customer_id = customer.id
+    invoice.customer_name = customer.name
+    invoice.customer_gstin = customer.gstin
+    invoice.customer_state = customer.state
+    invoice.customer_address = customer.address
+    invoice.customer_vendor_code = customer.vendor_code
     invoice.date = payload.date
     invoice.po_number = payload.po_number
     if payload.invoice_number:
@@ -327,6 +336,7 @@ def update_invoice(invoice_id: int, payload: schemas.InvoiceUpdate, db: Session 
     invoice.igst = round(igst, 2)
     invoice.gst_total = round(gst_amt, 2)
     invoice.grand_total = round(subtotal + gst_amt, 2)
+    invoice.is_intra_state = is_intra
     invoice.tax_breakdown = tax_breakdown
 
     # Delete old lines and recreate
