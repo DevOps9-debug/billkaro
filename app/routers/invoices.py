@@ -155,8 +155,8 @@ def create_invoice(payload: schemas.InvoiceCreate, db: Session = Depends(get_db)
         cgst=round(cgst, 2),
         sgst=round(sgst, 2),
         igst=round(igst, 2),
-        gst_total=round(gst_amt, 2),
-        grand_total=round(subtotal + gst_amt, 2),
+        gst_total=round(round(cgst, 2) + round(sgst, 2) + round(igst, 2), 2),
+        grand_total=round(round(subtotal, 2) + round(round(cgst, 2) + round(sgst, 2) + round(igst, 2), 2), 2),
         is_intra_state=is_intra,
         col_snapshot=col_snapshot,
         tax_breakdown=tax_breakdown,
@@ -334,8 +334,8 @@ def update_invoice(invoice_id: int, payload: schemas.InvoiceUpdate, db: Session 
     invoice.cgst = round(cgst, 2)
     invoice.sgst = round(sgst, 2)
     invoice.igst = round(igst, 2)
-    invoice.gst_total = round(gst_amt, 2)
-    invoice.grand_total = round(subtotal + gst_amt, 2)
+    invoice.gst_total = round(invoice.cgst + invoice.sgst + invoice.igst, 2)
+    invoice.grand_total = round(invoice.subtotal + invoice.gst_total, 2)
     invoice.is_intra_state = is_intra
     invoice.tax_breakdown = tax_breakdown
 
