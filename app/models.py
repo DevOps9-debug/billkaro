@@ -91,6 +91,7 @@ class Invoice(Base):
     po_number = Column(String(100), nullable=True)
 
     subtotal = Column(Numeric(12,2), default=0)
+    gst_rate = Column(Numeric(5,2), default=18)
     gst_total = Column(Numeric(12,2), default=0)
     grand_total = Column(Numeric(12,2), default=0)
     cgst = Column(Numeric(12,2), default=0)
