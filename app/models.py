@@ -1,6 +1,6 @@
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, Date, DateTime,
-    ForeignKey, JSON, Text, func, UniqueConstraint
+    ForeignKey, JSON, Text, func, UniqueConstraint, Numeric
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -90,17 +90,16 @@ class Invoice(Base):
     customer_vendor_code = Column(String(50), nullable=True)
     po_number = Column(String(100), nullable=True)
 
-    subtotal = Column(Float, default=0)
-    gst_rate = Column(Float, default=18)
-    cgst = Column(Float, default=0)
-    sgst = Column(Float, default=0)
-    igst = Column(Float, default=0)
-    gst_total = Column(Float, default=0)
-    grand_total = Column(Float, default=0)
+    subtotal = Column(Numeric(12,2), default=0)
+    gst_total = Column(Numeric(12,2), default=0)
+    grand_total = Column(Numeric(12,2), default=0)
+    cgst = Column(Numeric(12,2), default=0)
+    sgst = Column(Numeric(12,2), default=0)
+    igst = Column(Numeric(12,2), default=0)
     is_intra_state = Column(Boolean, default=True)
     col_snapshot = Column(JSON, nullable=True, default=list)
     tax_breakdown = Column(JSON, nullable=True, default=list)
-    status = Column(String(20), default="active")  # "active" or "cancelled"
+    status = Column(String(20), default="active")
     created_at = Column(DateTime, server_default=func.now())
 
     customer = relationship("Customer", back_populates="invoices")
